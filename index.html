@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Guichê de Atendimento</title>
   <style>
+    /* Estilos gerais da página */
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
@@ -22,6 +23,7 @@
       text-align: center;
       margin-bottom: 30px;
     }
+    /* Estilos para formulários */
     label {
       font-weight: bold;
       display: block;
@@ -46,6 +48,7 @@
       cursor: pointer;
       margin-right: 10px;
     }
+    /* Estilos para as filas de atendimento */
     .fila-container {
       display: flex;
       justify-content: space-between;
@@ -70,6 +73,7 @@
       font-weight: bold;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
     }
+    /* Estilos para os displays de senha */
     .display-senha {
       background: white;
       padding: 25px;
@@ -80,6 +84,7 @@
       text-align: center;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+    /* Estilos para o timer automático */
     #autoTimer {
       font-weight: bold;
       text-align: center;
@@ -90,13 +95,17 @@
 <body>
 <div class="container">
   <h1>Guichê de Atendimento Hospitalar</h1>
+  
+  <!-- Formulário para cadastro de pacientes -->
   <label for="nome">Nome do Paciente:</label>
   <input type="text" id="nome" placeholder="Nome completo">
+  
   <label for="tipo">Tipo de Atendimento:</label>
   <select id="tipo">
     <option value="Normal">Normal</option>
     <option value="Preferencial">Preferencial</option>
   </select>
+  
   <label for="especialidade">Especialidade:</label>
   <select id="especialidade">
     <option value="CG">Clínica Geral</option>
@@ -105,9 +114,13 @@
     <option value="GER">Geriatria</option>
     <option value="ORT">Ortopedia</option>
   </select>
+  
+  <!-- Botões de ação -->
   <button onclick="gerarSenha()">Gerar Senha</button>
   <button onclick="chamarProximoGuiche(1)">Chamar Guichê 1</button>
   <button onclick="chamarProximoGuiche(2)">Chamar Guichê 2</button>
+  
+  <!-- Container das filas de atendimento -->
   <div class="fila-container">
     <div class="fila">
       <h3>Fila Normal</h3>
@@ -119,6 +132,7 @@
     </div>
   </div>
 
+  <!-- Displays dos guichês -->
   <div class="display-senha" id="guiches-container" style="display: flex; justify-content: space-between; gap: 20px;">
     <div class="display-senha" id="guiche1" style="flex: 1;">
       Nenhum paciente chamado ainda.
@@ -128,6 +142,7 @@
     </div>
   </div>
 
+  <!-- Timers automáticos para os guichês -->
   <div id="autoTimer" style="text-align: center; margin-top: 10px; display: flex; justify-content: space-around;">
     <div><strong>Guichê 1</strong> - Próxima chamada automática em: <span id="timer1">05:00</span></div>
     <div><strong>Guichê 2</strong> - Próxima chamada automática em: <span id="timer2">05:00</span></div>
@@ -135,6 +150,7 @@
 </div>
 
 <script>
+// Mapeamento das especialidades para nomes completos
 const mapEspecialidades = {
   CG: 'Clínica Geral',
   GIN: 'Ginecologia',
@@ -143,27 +159,34 @@ const mapEspecialidades = {
   ORT: 'Ortopedia'
 };
 
+// Função para obter os contadores de pacientes por especialidade do localStorage
 function getContadores() {
   return JSON.parse(localStorage.getItem('contadoresEspecialidades') || '{}');
 }
 
+// Função para salvar os contadores de pacientes por especialidade no localStorage
 function setContadores(data) {
   localStorage.setItem('contadoresEspecialidades', JSON.stringify(data));
 }
 
+// Função para formatar o tempo em minutos e segundos (MM:SS)
 function formatarTempo(segundos) {
   const m = String(Math.floor(segundos / 60)).padStart(2, '0');
   const s = String(segundos % 60).padStart(2, '0');
   return `${m}:${s}`;
 }
 
+// Função para calcular o tempo restante para a próxima chamada automática de um guichê
 function calcularTempoRestanteGuiche(guiche) {
   const ultima = parseInt(localStorage.getItem('ultimaChamadaTimeGuiche' + guiche)) || Date.now();
   const agora = Date.now();
   return Math.max(0, 300 - Math.floor((agora - ultima) / 1000));
 }
 
+// Variável para armazenar os tempos de início dos timers
 let timerStartTimes = {1: Date.now(), 2: Date.now()};
+
+// Função para iniciar o timer de um guichê específico
 function iniciarTimerGuiche(guiche) {
   setInterval(() => {
     const restante = calcularTempoRestanteGuiche(guiche);
@@ -171,16 +194,18 @@ function iniciarTimerGuiche(guiche) {
     if (restante <= 0) {
       chamarProximoGuiche(guiche);
       localStorage.setItem('ultimaChamadaTimeGuiche' + guiche, Date.now());
-    timerStartTimes[guiche] = Date.now();
+      timerStartTimes[guiche] = Date.now();
     }
   }, 1000);
 }
 
+// Função para chamar o próximo paciente de um guichê específico
 function chamarProximoGuiche(guiche) {
   const filaPreferencial = JSON.parse(localStorage.getItem('filaPreferencial') || '[]');
   const filaNormal = JSON.parse(localStorage.getItem('filaNormal') || '[]');
   let proximo = null;
 
+  // Verifica primeiro a fila preferencial, depois a normal
   if (filaPreferencial.length > 0) {
     proximo = filaPreferencial.shift();
     localStorage.setItem('filaPreferencial', JSON.stringify(filaPreferencial));
@@ -190,11 +215,14 @@ function chamarProximoGuiche(guiche) {
   }
 
   if (proximo) {
+    // Atualiza o tempo da última chamada e armazena o histórico
     localStorage.setItem('ultimaChamadaTimeGuiche' + guiche, Date.now());
     const chamadas = JSON.parse(localStorage.getItem('chamadas') || '[]');
     chamadas.push(proximo);
     if (chamadas.length > 10) chamadas.shift();
     localStorage.setItem('chamadas', JSON.stringify(chamadas));
+    
+    // Atualiza o display do guichê com as informações do paciente
     document.getElementById(`guiche${guiche}`).innerHTML = `
       Nome: ${proximo.nome}<br/>
       Senha: ${proximo.senha} | ${proximo.tipo}<br/>
@@ -208,16 +236,27 @@ function chamarProximoGuiche(guiche) {
   atualizarFilas();
 }
 
+// Função para gerar uma nova senha para o paciente
 function gerarSenha() {
   const nome = document.getElementById('nome').value.trim();
   const tipo = document.getElementById('tipo').value;
   const especialidade = document.getElementById('especialidade').value;
+  
+  // Validação do nome
   if (!nome) return alert("Digite o nome do paciente.");
+  
+  // Obtém e atualiza os contadores de especialidades
   const contadores = getContadores();
   contadores[especialidade] = (contadores[especialidade] || 0) + 1;
+  
+  // Verifica o limite de pacientes por especialidade
   if (contadores[especialidade] > 20) return alert("Limite de pacientes atingido para esta especialidade hoje.");
+  
+  // Gera a senha no formato "ESP001"
   const senha = `${especialidade}${String(contadores[especialidade]).padStart(3, '0')}`;
   setContadores(contadores);
+  
+  // Cria o objeto paciente com todas as informações
   const data = new Date();
   const paciente = {
     nome,
@@ -227,25 +266,34 @@ function gerarSenha() {
     data: data.toLocaleDateString(),
     hora: data.toLocaleTimeString()
   };
+  
+  // Adiciona o paciente à fila apropriada (normal ou preferencial)
   const filaKey = tipo === "Preferencial" ? 'filaPreferencial' : 'filaNormal';
   const fila = JSON.parse(localStorage.getItem(filaKey) || '[]');
   fila.push(paciente);
   localStorage.setItem(filaKey, JSON.stringify(fila));
+  
+  // Atualiza a exibição das filas e limpa o campo do nome
   atualizarFilas();
   document.getElementById('nome').value = '';
 }
 
+// Função para atualizar a exibição das filas na tela
 function atualizarFilas() {
   const normalDiv = document.getElementById('fila-normal');
   const preferencialDiv = document.getElementById('fila-preferencial');
   normalDiv.innerHTML = '';
   preferencialDiv.innerHTML = '';
+  
+  // Adiciona os pacientes da fila normal
   JSON.parse(localStorage.getItem('filaNormal') || '[]').forEach(p => {
     const div = document.createElement('div');
     div.className = 'paciente';
     div.textContent = `${p.senha} - ${p.nome}`;
     normalDiv.appendChild(div);
   });
+  
+  // Adiciona os pacientes da fila preferencial
   JSON.parse(localStorage.getItem('filaPreferencial') || '[]').forEach(p => {
     const div = document.createElement('div');
     div.className = 'paciente';
@@ -254,6 +302,7 @@ function atualizarFilas() {
   });
 }
 
+// Inicia os timers dos guichês e atualiza as filas ao carregar a página
 iniciarTimerGuiche(1);
 iniciarTimerGuiche(2);
 atualizarFilas();
